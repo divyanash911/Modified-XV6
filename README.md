@@ -1,39 +1,54 @@
-Schedulers implemented in this version of xv6 : 
-  
-<h1>Round Robin Scheduler(RR) - </h1>
- This is the default scheduler of the xv6 developed by MIT. This runs each process for a single clock tick after which it gives back control to any process which is available(RUNNABLE) by looking it up inside the proc table from the scheduler(); function in kernel/proc.c . 
-  
-<h1>First Come First Serve(FCFS) -  </h1>
-This scheduler schedules process based on their arrival time. The process which arrives first gets CPU for it's entire running time. 
-So the usertrap() function in kernel/trap.c doesn't call yield() during clock interrupt. In the scheduler() of kernel/proc.c we look for a runnable process with lowest arrival time.We then schedule that process for it's entire duration 
-  
- <h1>Multi - Level Feedback Queue(MLFQ) - </h1>
- This scheduler create a Multi Level feedback Queue(MLFQ) data structure which consists of 4 queues with corresponding time slices: 
- <ul>
- <li> Queue 0 - 1 Tick </li>
- <li> Queue 1 - 3 Ticks </li>
- <li> Queue 2 - 9 Ticks </li>
- <li> Queue 3 - 15 Ticks </li>
- </ul>
-Each process undergoes RoundRobin in it's respective Queue and after consuming it's time interval for Round Robin if it has not completed it is pushed down in a queue of one priority lower. The scheduler in kernel/proc.c checks for highest priority queue with highest waittime where waittime is the time it has not used CPU for. If a process does not get CPU for a certain number of ticks (here 30) we boost it's priority by 1 level to prevent starvation of process.  
+# Modified xv6 Documentation
 
-<h2>Implementation</h2>
-<ul>
-  <li>We maintain 3 variables in struct proc in kernel/proc.h ie p->ticks_used , p->queue_no , p->waittime.</li>
-  <li>This implementation does not require maintaing actual queues. It exploits waittime of processes to schedule them accordingly.</li>
-  <li>The RUNNABLE process with highest queue priority is scheduled first. In case of same priority , the process with higher waittime is scheduled</li>
-  <li>Waittime is initialised as 0 in allocproc() in kernel/proc.c</li>
-  <li>In updatetime() of kernel/proc.c we increment waittime of all runnable processes by 1 and ticks_used of RUNNING process by one</li>
-  <li>When a process is scheduled we reset waittime to 0.</li>
-  <li>In usertrap of kernel/trap.c if a process exceeds the timeslice of queue , we demote the queue and reset ticks_used to 0</li>
-  <li>In scheduler() in kernel/proc.c we first check runnable processes with waittime more than AGETICK (here 30) , we increase their priority by 1 .</li>
-</ul>
+## Introduction
 
- Results on running SCHEDULERTEST on the three algorithms: 
- <ul>
- <li>RR - Average rtime 11,  wtime 145 </li>
-<li> FCFS - Average rtime 11,  wtime 122 </li>
- <li>MLFQ - Average rtime 9,  wtime 141 </li>
- </ul>
- ![image](https://github.com/serc-courses/mini-project-2-divyanash911/assets/114301176/606a3cfa-4b64-4023-b3a2-e5969758b645)
-![image](https://github.com/serc-courses/mini-project-2-divyanash911/assets/114301176/9b5353ca-8dcf-45d0-9604-b145ae3db483)
+This documentation provides an overview of the modifications made to the xv6 operating system, including new features and system calls. The enhancements aim to improve the scheduling policy, introduce copy-on-write functionality forking, and implement signal handling mechanisms.
+
+## New Features
+
+### Schedulers
+
+#### Round Robin Scheduler
+
+The Round Robin scheduler has been implemented to ensure fair allocation of CPU time among processes. Each process is assigned a fixed time quantum, and when the quantum expires, the scheduler switches to the next process in the queue.
+
+#### Multi-Level Feedback Queue Scheduler
+
+The Multi-Level Feedback Queue scheduler is designed to adapt to the behavior of processes over time. Processes are initially placed in a queue with a high time quantum, and based on their CPU usage, they are moved to different queues with varying time quanta.
+
+#### First Come First Serve Scheduler
+
+The First Come First Serve scheduler prioritizes processes based on their arrival time. The process that arrives first is given CPU time before others, ensuring a straightforward and predictable scheduling policy.
+
+### Copy-on-Write Fork
+
+The copy-on-write fork mechanism has been added to optimize the process forking operation. Instead of duplicating the entire process's memory space immediately, the parent and child processes initially share the same memory pages. Only when a process attempts to modify a shared page does the system create a separate copy for that process.
+
+### Signal Handling
+
+#### sigalarm
+
+The `sigalarm` feature allows processes to set an alarm signal that will be delivered to the process after a specified time interval. This enables processes to schedule tasks or perform actions when a particular time duration elapses.
+
+#### sigreturn
+
+The `sigreturn` system call allows a process to restore its signal mask and register values to a previously saved state. This is useful in signal handling to ensure a clean and consistent restoration of the process's context.
+
+### System Calls
+
+#### getreadcount
+
+The `getreadcount` system call provides a way for processes to inquire about the number of read system calls made by a given file descriptor. This information can be useful for monitoring and debugging purposes.
+
+## Building and Running
+
+To build and run the modified xv6 operating system, follow the standard xv6 build and execution procedures. Refer to the original xv6 documentation for detailed instructions.
+
+```bash
+make
+make qemu
+```
+
+## Conclusion
+
+These modifications enhance the xv6 operating system by introducing new scheduling policies, optimizing process forking, and adding signal handling capabilities. Developers and users can take advantage of these features to create more efficient and responsive systems.
