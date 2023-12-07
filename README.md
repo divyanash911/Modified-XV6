@@ -46,7 +46,7 @@ To build and run the modified xv6 operating system, follow the standard xv6 buil
 
 ```bash
 make
-make qemu
+make qemu scheduler = 'MLFQ(or)RR(or)FCFS'
 ```
 
 ## Conclusion
